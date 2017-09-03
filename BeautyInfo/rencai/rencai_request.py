@@ -4,5 +4,5 @@ class Downloader(object):
 
 
 
-def downlaod():
-    pass
+    def downlaod(self):
+        pass
