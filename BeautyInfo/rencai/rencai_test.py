@@ -6,12 +6,12 @@ import requests
 from urllib.request import *
 def open_url_requests():
     url = 'http://s.138job.com/hire/14?keyword=&workadd=0&keywordtype=1&position=1000'
-    proxy = {'http' : '124.89.33.75:9999'}
+    proxy = {'http' : '116.16.105.137:9000'}
     proxy_support = ProxyHandler(proxy)
     opener = build_opener(proxy_support)
 
     install_opener(opener)
-    response = urlopen(url, timeout=10)
+    response = urlopen(url, timeout=20)
     html = response.read()
     print(html)
 

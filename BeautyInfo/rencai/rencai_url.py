@@ -25,30 +25,31 @@ class RequestRenCai(object):
         self.old_position_list_urls = []
         self.new_position_urls = []
         self.old_position_urls = []
-        self.proxy_ip = ['222.34.139.52:808']
-        self.headers = [
-            {'Use-Agent': "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)"},
-            {"Use-Agent": "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)"},
-            {"Use-Agent": "Opera/9.80 (Android 2.3.4; Linux; Opera Mobi/build-1107180945; U; en-GB) Presto/2.8.149 Version/11.10"},
-            {"Use-Agent": "Opera/8.0 (Windows NT 5.1; U; en)"},
-            {"Use-Agent": "Openwave/ UCWEB7.0.2.37/28/999"},
-            {"Use-Agent": "MQQBrowser/26 Mozilla/5.0 (Linux; U; Android 2.3.7; zh-cn; MB200 Build/GRJ22; CyanogenMod-7) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1"},
-            {"Use-Agent": "Mozilla/5.0 (X11; U; Linux x86_64; zh-CN; rv:1.9.2.10) Gecko/20100922 Ubuntu/10.10 (maverick) Firefox/3.6.10"},
-            {"Use-Agent": "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.16 (KHTML, like Gecko) Chrome/10.0.648.133 Safari/534.16"},
-        ]
+        # self.proxy_ip = ['222.34.139.52:808']
+        #self.headers = [
+        #    {'Use-Agent': "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)"},
+        #    {"Use-Agent": "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)"},
+        #    {"Use-Agent": "Opera/9.80 (Android 2.3.4; Linux; Opera Mobi/build-1107180945; U; en-GB) Presto/2.8.149 Version/11.10"},
+        #    {"Use-Agent": "Opera/8.0 (Windows NT 5.1; U; en)"},
+        #    {"Use-Agent": "Openwave/ UCWEB7.0.2.37/28/999"},
+        #    {"Use-Agent": "MQQBrowser/26 Mozilla/5.0 (Linux; U; Android 2.3.7; zh-cn; MB200 Build/GRJ22; CyanogenMod-7) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1"},
+        #    {"Use-Agent": "Mozilla/5.0 (X11; U; Linux x86_64; zh-CN; rv:1.9.2.10) Gecko/20100922 Ubuntu/10.10 (maverick) Firefox/3.6.10"},
+        #    {"Use-Agent": "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.16 (KHTML, like Gecko) Chrome/10.0.648.133 Safari/534.16"},
+        #]
         self.count = 0
         self.proxy_url = 'http://www.xicidaili.com/nt/'
         self.proxy_ip = []
         self.proxy_ip_usable = []
 
-    def get_and_test_proxy_ip(self):
 
-        headers = {'Use-Agent': "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)"}
-        for i in range(1, 50):
+    def get_proxy_ip(self):
+        # headers = {'Use-Agent': "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)"}
+        for i in range(1, 2):
             req = Request(self.proxy_url + str(i))
             req.add_header("User-Agent", "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N)"
                                      " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.")
             html = urlopen(req).read()
+            time.sleep(10)
             html_txt = decode_html(html)
             bs_obj = BeautifulSoup(html_txt, 'html.parser')
             # print(html_txt)
@@ -57,49 +58,46 @@ class RequestRenCai(object):
             for ip in ip_list_nodes:
                 ip_address = ip.td.next_sibling.next_sibling
                 ip_port = ip_address.next_sibling.next_sibling
-                # print(ip_address)
+                #print(ip_address)
                 # print(ip_port)
-                print(ip_address.get_text())
+                # print(ip_address.get_text())
                 self.proxy_ip.append(ip_address.get_text() + ':' + ip_port.get_text())
-            # print(self.proxy_ip)
-            for ip_proxy in self.proxy_ip:
-                try:
-                    print(ip_proxy)
-                    proxy_handler = {'http': ip_proxy}
-                    r = requests.get('http://www.bing.com/', proxies={'http': str(ip_proxy)}, timeout=1)
-                    if r.status_code == 200:
-                        print(r.text)
-                        print('success   ' + ip_proxy)
-                        self.proxy_ip_usable.append(ip_proxy)
-                    else:
-                        print('connection failed, proxy was not usable')
-                except:
-                    print('connection failed, proxy was not usable')
-        return self.proxy_ip_usable
+                # print(self.proxy_ip)
+
+
+        return self.proxy_ip
 
     def update_ip_proxy(self):
-        self.proxy_ip_usable = self.get_and_test_proxy_ip()
+        self.proxy_ip_usable = self.get_proxy_ip()
+        print(self.proxy_ip_usable)
+        # print(self.proxy_ip_usable)
 
+
+    def get_html_txt_(self, page_url):
+        # ip_proxy = '180.168.179.193:8080'
+        # ip_proxy = self.proxy_ip[0]
+        for k in range(100):
+            try:
+                if self.proxy_ip_usable == []:
+                    self.update_ip_proxy()
+                proxy = {'http': str(self.proxy_ip_usable.pop())}
+                print(proxy)
+                proxy_support = ProxyHandler(proxy)
+                opener = build_opener(proxy_support)
+                install_opener(opener)
+                response = urlopen(page_url, timeout=5)
+                html = response.read()
+                print(response.getcode())
+                html_txt = decode_html(html)
+                return html_txt
+
+            except:
+                pass
+        return None
 
     def get_html_txt(self, page_url):
-        # ip_proxy = '180.168.179.193:8080'
-        ip_proxy = self.proxy_ip[0]
-        try:
-            self.count += 1
-            if self.count%200 == 0:
-                # 没访问500次就换代理Ip
-                ip_proxy = self.proxy_ip[0]
-            headers = self.headers[self.count % 8]
-            # print('begin')
-            #html = urlopen(page_url, timeout=5).read()
-            html = requests.get(page_url, headers=headers).text
-            html_txt = str(html)
-            #html_txt = decode_html(html)
-            time.sleep(0.5)
-            # print(html_txt)
-
-        except:
-            return None
+        html = urlopen(page_url).read()
+        html_txt = decode_html(html)
         return html_txt
 
     def get_bs_obj(self, html_txt):
@@ -173,72 +171,15 @@ class RequestRenCai(object):
             self.old_position_list_urls.append(list_page)
             self.get_data_from_list_page(list_page)
 
-
-class ProxyIp(object):
-
-    def __init__(self):
-        self.proxy_url = 'http://www.xicidaili.com/nt/'
-        self.proxy_ip = []
-        self.proxy_ip_usable = []
-
-    def get_and_test_proxy_ip(self):
-
-        headers = {'Accept': 'text/html, application/xhtml+xml, image/jxr, */*',
-               'Accept - Encoding':'gzip, deflate',
-               'Accept-Language':'zh-Hans-CN, zh-Hans; q=0.5',
-               'Connection':'Keep-Alive',
-               'Host':'zhannei.baidu.com',
-               'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edge/15.15063'}
-        for i in range(1, 50):
-            req = Request(self.proxy_url + str(i))
-            req.add_header("User-Agent", "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N)"
-                                     " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.")
-            html = urlopen(req).read()
-            html_txt = decode_html(html)
-            bs_obj = BeautifulSoup(html_txt, 'html.parser')
-            # print(html_txt)
-            ip_list_nodes = bs_obj.find_all('tr', class_='odd')
-            # print(ip_list_nodes)
-            for ip in ip_list_nodes:
-                ip_address = ip.td.next_sibling.next_sibling
-                ip_port = ip_address.next_sibling.next_sibling
-                # print(ip_address)
-                # print(ip_port)
-                self.proxy_ip.append(ip_address.get_text() + ':' + ip_port.get_text())
-            # print(self.proxy_ip)
-            for ip_proxy in self.proxy_ip:
-                try:
-                    proxy_handler = {'http': ip_proxy}
-                    r = requests.get('http://www.bing.com/',headers=headers, proxies=proxy_handler, timeout=1)
-                    if r.status_code == 200:
-                        print('success   ' + ip_proxy)
-                        self.proxy_ip_usable.append(ip_proxy)
-                    else:
-                        print('connection failed, proxy was not usable')
-                except:
-                    print('connection failed, proxy was not usable')
-        return self.proxy_ip_usable
-
-    def update_ip_proxy(self):
-        self.proxy_ip_usable = self.get_and_test_proxy_ip()
-
-
-
 if __name__ == '__main__':
-    # obj = RenCai()
-    # obj.get_position_page(4)
-    #obj = ProxyIp()
-    #obj.get_and_test_proxy_ip()
-    # 创建ProxyIp对象，然后初始化这个对象的代理Ip
-    # 创建RequestRenCai对象，载入proxy_ip
-    # 调用方法，开始爬取信息并整理好
-    proxy_support = ProxyIp()
     obj = RequestRenCai()
-    # obj.get_data_from_list_page('http://s.138job.com/hire/6?keyword=&workadd=0&keywordtype=1&position=2212')
+    # pool = Pool(processes=20)
     for i in range(1000, 2500):
         try:
             print(i)
-            obj.update_ip_proxy()
+            obj.main(i)
+            # pool.apply_async(obj.main, (i,))
+            # obj.get_proxy_ip()
 
         except:
             pass
